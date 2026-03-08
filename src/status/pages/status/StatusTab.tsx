@@ -7,10 +7,9 @@ import {
   DeleteConfirmModal,
   DetailSheet,
   EditableField,
-  EmptyHint,
   ResourceBar,
+  StatusEffectDisplay,
 } from '../../shared/components';
-import { SelectEditorOption } from '../../shared/components/editors';
 import { withMvuData, WithMvuDataProps } from '../../shared/hoc';
 import styles from './StatusTab.module.scss';
 
@@ -43,127 +42,6 @@ const ResourceFields = [
   { label: 'MP', currentKey: '法力值', maxKey: '法力值上限', type: 'mp' as const },
   { label: 'SP', currentKey: '体力值', maxKey: '体力值上限', type: 'sp' as const },
 ] as const;
-
-// 状态效果类型选项
-const StatusEffectTypeOptions: SelectEditorOption[] = [
-  { label: '增益', value: '增益' },
-  { label: '减益', value: '减益' },
-  { label: '特殊', value: '特殊' },
-];
-
-interface StatusEffectsProps {
-  effects: Record<
-    string,
-    { 类型?: string; 效果?: string; 层数?: number; 剩余时间?: string; 来源?: string }
-  >;
-  editEnabled: boolean;
-  onDelete: (name: string) => void;
-}
-
-const StatusEffects: FC<StatusEffectsProps> = ({ effects, editEnabled, onDelete }) => {
-  return (
-    <div className={styles.statusEffects}>
-      {_.isEmpty(effects) ? (
-        <EmptyHint className={styles.emptyEffects} text="暂无状态效果" />
-      ) : (
-        _.map(effects, (effect, name) => {
-          const typeClass =
-            effect.类型 === '增益'
-              ? styles.effectBuff
-              : effect.类型 === '减益'
-                ? styles.effectDebuff
-                : styles.effectSpecial;
-
-          return (
-            <div
-              key={name}
-              className={`${styles.effectItem} ${typeClass} ${editEnabled ? styles.effectItemEdit : ''}`}
-            >
-              {editEnabled ? (
-                <>
-                  <div className={styles.effectEditHeader}>
-                    <div className={styles.effectEditHeaderContent}>
-                      <span className={styles.effectName}>{name}</span>
-                      <div className={styles.effectEditHeaderMeta}>
-                        <EditableField
-                          path={`主角.状态效果.${name}.类型`}
-                          value={effect.类型 ?? '增益'}
-                          type="select"
-                          selectConfig={{ options: StatusEffectTypeOptions }}
-                        />
-                        <div className={styles.effectMetaItem}>
-                          <span className={styles.effectMetaLabel}>层数</span>
-                          <EditableField
-                            path={`主角.状态效果.${name}.层数`}
-                            value={effect.层数 ?? 1}
-                            type="number"
-                            numberConfig={{ min: 1, step: 1 }}
-                          />
-                        </div>
-                        <div className={styles.effectMetaItem}>
-                          <span className={styles.effectMetaLabel}>剩余时间</span>
-                          <EditableField
-                            path={`主角.状态效果.${name}.剩余时间`}
-                            value={effect.剩余时间 ?? ''}
-                            type="text"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      className={styles.effectDeleteBtn}
-                      onClick={() => onDelete(name)}
-                      title="删除状态效果"
-                    >
-                      <i className="fa-solid fa-trash" />
-                    </button>
-                  </div>
-                  <div className={styles.effectEditContent}>
-                    <span className={styles.effectEditLabel}>效果</span>
-                    <EditableField
-                      path={`主角.状态效果.${name}.效果`}
-                      value={effect.效果 ?? ''}
-                      type="textarea"
-                    />
-                  </div>
-                  <div className={styles.effectEditContent}>
-                    <span className={styles.effectEditLabel}>来源</span>
-                    <EditableField
-                      path={`主角.状态效果.${name}.来源`}
-                      value={effect.来源 ?? ''}
-                      type="text"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className={styles.effectInfo}>
-                    <div className={styles.effectHeader}>
-                      <span className={styles.effectName}>{name}</span>
-                      {effect.类型 && <span className={styles.effectType}>{effect.类型}</span>}
-                    </div>
-                    {effect.效果 && <span className={styles.effectDesc}>{effect.效果}</span>}
-                    {effect.来源 && (
-                      <span className={styles.effectSource}>来源：{effect.来源}</span>
-                    )}
-                  </div>
-                  <div className={styles.effectMeta}>
-                    {_.isNumber(effect.层数) && effect.层数 > 1 && (
-                      <span className={styles.effectStack}>x{effect.层数}</span>
-                    )}
-                    {effect.剩余时间 && (
-                      <span className={styles.effectTime}>{effect.剩余时间}</span>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-};
 
 /**
  * 状态页内容组件
@@ -268,9 +146,6 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const effectEntries = Object.entries(statusEffects);
   const effectStats = {
     total: effectEntries.length,
-    buff: effectEntries.filter(([, effect]) => effect.类型 === '增益').length,
-    debuff: effectEntries.filter(([, effect]) => effect.类型 === '减益').length,
-    special: effectEntries.filter(([, effect]) => effect.类型 === '特殊').length,
   };
 
   const ascension = player.登神长阶;
@@ -291,10 +166,6 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
   const ascensionSummary = ascension?.是否开启
     ? _.compact(ascensionParts).join(' · ') || '已开启'
     : '未开启';
-
-  const statusEffectNames = effectEntries.map(([name]) => name);
-
-  const statusEffectSummary = effectStats.total ? statusEffectNames.join('、') : '无效果';
 
   return (
     <div className={styles.statusTab}>
@@ -337,11 +208,13 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                 <span className={styles.overviewStatValue}>{player.属性点 ?? 0}</span>
               )}
             </div>
-            <div className={styles.overviewStatItemWide}>
+          </div>
+          <div className={styles.overviewSummaryGrid}>
+            <div className={styles.overviewSummaryItem}>
               <span className={styles.overviewStatLabel}>状态效果</span>
-              <span className={styles.overviewStatSummary}>{statusEffectSummary}</span>
+              <StatusEffectDisplay effects={statusEffects} mode="chips" emptyText="无效果" />
             </div>
-            <div className={styles.overviewStatItemWide}>
+            <div className={styles.overviewSummaryItem}>
               <span className={styles.overviewStatLabel}>登神长阶</span>
               <span className={styles.overviewStatSummary}>{ascensionSummary}</span>
             </div>
@@ -411,7 +284,14 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.detailEntryHeader}>
             <div>
               <div className={styles.detailEntryTitle}>状态效果</div>
-              <div className={styles.detailEntrySummary}>{statusEffectSummary}</div>
+              <div className={styles.detailEntrySummary}>
+                <StatusEffectDisplay
+                  effects={statusEffects}
+                  mode="chips"
+                  compact
+                  emptyText="无效果"
+                />
+              </div>
             </div>
             <div className={styles.detailEntryMeta}>
               <span className={styles.detailEntryCount}>{effectStats.total}</span>
@@ -443,13 +323,14 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
       <DetailSheet
         open={activeDetail === 'status-effects'}
         title="状态效果"
-        subtitle={statusEffectSummary}
+        subtitle={effectStats.total ? Object.keys(statusEffects).join('、') : '无效果'}
         onClose={() => setActiveDetail(null)}
       >
-        <StatusEffects
+        <StatusEffectDisplay
           effects={statusEffects}
           editEnabled={editEnabled}
-          onDelete={name =>
+          pathPrefix="主角.状态效果"
+          onDelete={(name: string) =>
             setDeleteTarget({
               type: '状态效果',
               path: `主角.状态效果.${name}`,

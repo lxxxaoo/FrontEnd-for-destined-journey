@@ -403,72 +403,72 @@ const ObsidianTheme: Theme = {
   name: '墨黑',
   colors: {
     // 窗口容器
-    windowBg: '#0a0a0d',
-    windowBorder: '#2d2f36',
+    windowBg: '#15171c',
+    windowBorder: '#323846',
 
     // 标题栏
-    titleBarBg: '#121218',
-    titleBarText: '#e6e8f0',
-    titleBarIcon: '#a0a6b2',
-    titleBarBtnHover: 'rgba(160, 166, 178, 0.18)',
+    titleBarBg: '#1a1d24',
+    titleBarText: '#f3f5f8',
+    titleBarIcon: '#b9c0cc',
+    titleBarBtnHover: 'rgba(255, 255, 255, 0.08)',
 
     // Tab 栏
-    tabBarBg: '#0f0f14',
-    tabText: '#a0a6b0',
-    tabActiveText: '#f1f3fb',
-    tabIndicator: '#6b7280',
-    tabHoverBg: 'rgba(107, 114, 128, 0.16)',
+    tabBarBg: '#171a21',
+    tabText: '#a6afbd',
+    tabActiveText: '#f4f7fb',
+    tabIndicator: '#8f9fff',
+    tabHoverBg: 'rgba(255, 255, 255, 0.06)',
 
     // 内容区域
-    contentBg: '#111116',
-    cardBg: '#17171d',
-    cardBorder: '#2e313a',
+    contentBg: '#12151b',
+    cardBg: '#1b1f27',
+    cardBorder: '#2c3340',
 
     // 文本颜色
-    textPrimary: '#e9edf5',
-    textSecondary: '#b2b7c2',
-    textMuted: '#7a7f8b',
+    textPrimary: '#f3f5f8',
+    textSecondary: '#c1c8d4',
+    textMuted: '#8f98a8',
 
     // 资源条
-    resourceHp: '#c0443f',
-    resourceMp: '#3f6ec7',
-    resourceSp: '#3f8a64',
-    resourceExp: '#c99a3a',
-    resourceText: '#d5dae6',
+    resourceHp: '#ff5f57',
+    resourceMp: '#5b8cff',
+    resourceSp: '#35c98a',
+    resourceExp: '#f0b84b',
+    resourceText: '#f3f5f8',
 
     // 品质颜色
-    qualityUnique: '#dba15b',
-    qualityMythic: '#c14c70',
-    qualityLegendary: '#e2c06a',
-    qualityEpic: '#7a5bc2',
-    qualityRare: '#4f7fc8',
-    qualityUncommon: '#4f8e6a',
+    qualityUnique: '#f09f4d',
+    qualityMythic: '#e4587d',
+    qualityLegendary: '#e5c166',
+    qualityEpic: '#9a72f8',
+    qualityRare: '#5d97ff',
+    qualityUncommon: '#56bf7b',
 
     // 交互状态
-    primaryBg: '#3f4654',
-    primaryText: '#f3f6ff',
-    success: '#4a9a6b',
-    warning: '#d4a544',
-    error: '#d04a4a',
+    primaryBg: '#8f9fff',
+    primaryText: '#10131a',
+    success: '#35c98a',
+    warning: '#f0b84b',
+    error: '#ff6d6d',
 
     // 命定系统
-    affection: '#a8506b',
-    affectionBg: 'rgba(168, 80, 107, 0.28)',
-    affectionText: '#d29bad',
-    tagPresent: 'rgba(72, 160, 100, 0.2)',
-    tagPresentText: '#7fc6a0',
-    tagContract: 'rgba(184, 72, 100, 0.22)',
-    tagContractText: '#d59aac',
+    affection: '#ff6f91',
+    affectionBg: 'rgba(255, 111, 145, 0.18)',
+    affectionText: '#ffb2c1',
+    tagPresent: 'rgba(53, 201, 138, 0.16)',
+    tagPresentText: '#7ce3b4',
+    tagContract: 'rgba(255, 111, 145, 0.16)',
+    tagContractText: '#ffb0c0',
 
     // 登神长阶
-    ascensionElement: 'rgba(80, 140, 220, 0.18)',
-    ascensionPower: 'rgba(210, 150, 60, 0.18)',
-    ascensionLaw: 'rgba(150, 80, 200, 0.18)',
+    ascensionElement: 'rgba(91, 140, 255, 0.12)',
+    ascensionPower: 'rgba(240, 184, 75, 0.12)',
+    ascensionLaw: 'rgba(154, 114, 248, 0.12)',
 
     // 货币
-    currencyGold: '#e2c24f',
-    currencySilver: '#aeb4bf',
-    currencyCopper: '#b07c4c',
+    currencyGold: '#f5c24f',
+    currencySilver: '#d4dae4',
+    currencyCopper: '#d18b62',
   },
 };
 

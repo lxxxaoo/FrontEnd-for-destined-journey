@@ -10,6 +10,7 @@ export { EmptyHint } from './EmptyHint';
 export { IconTitle } from './IconTitle';
 export { ItemDetail } from './ItemDetail';
 export { ResourceBar } from './ResourceBar';
+export { StatusEffectDisplay } from './StatusEffectDisplay';
 
 // 通用组件类型导出
 export type { AscensionProps } from './Ascension/Ascension';
@@ -28,6 +29,7 @@ export type { EmptyHintProps } from './EmptyHint/EmptyHint';
 export type { IconTitleProps } from './IconTitle/IconTitle';
 export type { ItemData } from './ItemDetail';
 export type { ResourceBarProps } from './ResourceBar/ResourceBar';
+export type { StatusEffectDisplayProps, StatusEffectItem } from './StatusEffectDisplay';
 
 // 编辑器组件导出
 export {
