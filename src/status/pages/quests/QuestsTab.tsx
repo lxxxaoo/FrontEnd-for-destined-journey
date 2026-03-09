@@ -268,7 +268,7 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
 
   return (
     <div className={styles.questsTab}>
-      <Card className={styles.overviewCard}>
+      <Card className={styles.overviewCard} bodyClassName={styles.overviewCardBody}>
         <div className={styles.overviewHeader}>
           <IconTitle
             icon="fa-solid fa-list-check"
@@ -368,7 +368,7 @@ const QuestsTabContent: FC<WithMvuDataProps> = ({ data }) => {
       ) : null}
 
       {filteredQuestEntries.length === 0 ? (
-        <Card className={styles.emptyCard}>
+        <Card className={styles.emptyCard} bodyClassName={styles.emptyCardBody}>
           <EmptyHint
             className={styles.emptyHint}
             icon="fa-solid fa-scroll"
