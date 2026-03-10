@@ -54,7 +54,7 @@ export const useMapViewer = ({
       prefixUrl: 'https://openseadragon.github.io/openseadragon/images/',
       showNavigator: true,
       showNavigationControl: true,
-      showFullPageControl: false,
+      showFullPageControl: true,
       visibilityRatio: 1,
       constrainDuringPan: true,
       preserveImageSizeOnResize: true,
@@ -79,6 +79,7 @@ export const useMapViewer = ({
 
     viewer.addHandler('animation', handleUpdate);
     viewer.addHandler('resize', handleUpdate);
+    viewer.addHandler('full-page', handleUpdate);
 
     return () => {
       viewerRef.current = null;
@@ -110,7 +111,11 @@ export const useMapViewer = ({
             viewer.removeHandler('open', handleOpen);
           };
           viewer.addHandler('open', handleOpen);
-          viewer.open({ type: 'image', url: cachedObjectUrl });
+          viewer.open({
+            tileSource: new OpenSeadragon.ImageTileSource({
+              url: cachedObjectUrl,
+            }),
+          });
           return;
         }
 
@@ -143,7 +148,11 @@ export const useMapViewer = ({
           viewer.removeHandler('open', handleOpen);
         };
         viewer.addHandler('open', handleOpen);
-        viewer.open({ type: 'image', url: objectUrl });
+        viewer.open({
+          tileSource: new OpenSeadragon.ImageTileSource({
+            url: objectUrl,
+          }),
+        });
       } catch (error) {
         if (controller.signal.aborted) return;
         console.error('[MapViewer] 地图加载失败:', error);
