@@ -65,9 +65,10 @@
       </div>
 
       <div class="recheck-container">
-        <button class="recheck-button" :disabled="isChecking" @click="performCheck">
+        <button class="recheck-button" :disabled="isChecking" @click="handleRecheck">
           {{ isChecking ? '检查中...' : '重新检查' }}
         </button>
+        <button v-if="canSkip" class="skip-button" @click="showSkipConfirm = true">跳过检查</button>
       </div>
     </div>
 
@@ -78,18 +79,48 @@
         <span>环境检查通过，正在跳转...</span>
       </div>
     </transition>
+
+    <!-- 跳过确认弹窗 -->
+    <transition name="fade">
+      <div v-if="showSkipConfirm" class="modal-overlay" @click.self="showSkipConfirm = false">
+        <div class="modal-content">
+          <h3 class="modal-title">⚠️ 跳过环境检查</h3>
+          <div class="modal-body">
+            <p>您即将跳过环境检查，请仔细阅读并确认以下内容：</p>
+            <ul class="modal-list">
+              <li>我已确认当前运行环境中所有组件均<strong>无异常</strong></li>
+              <li>我了解跳过环境检查可能导致后续功能<strong>无法正常使用</strong></li>
+              <li>若因环境问题导致的任何异常，<strong>作者不承担任何责任</strong></li>
+            </ul>
+          </div>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" @click="showSkipConfirm = false">
+              取消
+            </button>
+            <button class="modal-btn modal-btn-confirm" @click="confirmSkip">确认跳过</button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { initialEnvStatus, performFullEnvCheck } from '../services/envCheck';
 
 const emit = defineEmits(['next', 'envCheckComplete']);
 
 const isChecking = ref(false);
+const recheckCount = ref(0);
+const showSkipConfirm = ref(false);
 
 const envStatus = ref({ ...initialEnvStatus });
+
+/** 重新检查3次仍未通过时，允许跳过 */
+const canSkip = computed(() => {
+  return recheckCount.value >= 3 && !envStatus.value.allOk && !isChecking.value;
+});
 
 async function performCheck() {
   isChecking.value = true;
@@ -103,6 +134,18 @@ async function performCheck() {
   } finally {
     isChecking.value = false;
   }
+}
+
+/** 手动重新检查，累加计数 */
+function handleRecheck() {
+  recheckCount.value++;
+  performCheck();
+}
+
+/** 确认跳过，关闭弹窗并执行下一步 */
+function confirmSkip() {
+  showSkipConfirm.value = false;
+  emit('next');
 }
 
 // 监听环境检查状态，检查通过后自动跳转到下一页
@@ -187,7 +230,7 @@ onMounted(() => {
 /* 淡入淡出过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,
@@ -198,6 +241,9 @@ onMounted(() => {
 .recheck-container {
   text-align: center;
   margin: 15px 0 0 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
 .recheck-button {
@@ -223,6 +269,24 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+.skip-button {
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 1em;
+  color: #856404;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  padding: 8px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.skip-button:hover {
+  background-color: #ffe69c;
+  border-color: #e0a800;
+}
+
 .success-message {
   display: flex;
   align-items: center;
@@ -239,6 +303,100 @@ onMounted(() => {
 
 .success-icon {
   font-size: 1.2em;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background-color: #fffdf7;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 24px 28px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.modal-title {
+  font-family: var(--title-font);
+  font-weight: 700;
+  color: #856404;
+  margin: 0 0 16px 0;
+  font-size: 1.3em;
+  text-align: center;
+}
+
+.modal-body {
+  font-size: 0.95em;
+  color: var(--text-color, #333);
+  line-height: 1.6;
+}
+
+.modal-body p {
+  margin: 0 0 10px 0;
+}
+
+.modal-list {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.modal-list li {
+  margin-bottom: 8px;
+}
+
+.modal-list li strong {
+  color: #c0392b;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-btn {
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 0.95em;
+  padding: 8px 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+}
+
+.modal-btn-cancel {
+  color: var(--title-color);
+  background-color: var(--item-bg-color, #f0f0f0);
+  border-color: var(--border-color, #ccc);
+}
+
+.modal-btn-cancel:hover {
+  background-color: var(--item-bg-hover-color, #e0e0e0);
+}
+
+.modal-btn-confirm {
+  color: #fff;
+  background-color: #e67e22;
+  border-color: #d35400;
+}
+
+.modal-btn-confirm:hover {
+  background-color: #d35400;
 }
 
 @media screen and (max-width: 600px) {
