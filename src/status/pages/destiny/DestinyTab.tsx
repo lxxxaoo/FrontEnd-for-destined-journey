@@ -450,23 +450,20 @@ const DestinyTabContent: FC<WithMvuDataProps> = ({ data }) => {
   };
 
   const getPartnerStatusSummary = (partner: Record<string, any>) => {
-    const effectEntries = Object.entries(partner.状态效果 ?? {});
-    const visibleEffects = effectEntries
-      .slice(0, 3)
-      .reduce<
-        Record<string, Parameters<typeof StatusEffectDisplay>[0]['effects'][string]>
-      >((acc, [name, effect]) => {
-        acc[name] = effect as Parameters<typeof StatusEffectDisplay>[0]['effects'][string];
-        return acc;
-      }, {});
-    const hiddenCount = effectEntries.length - Object.keys(visibleEffects).length;
+    const effects = (partner.状态效果 ?? {}) as Parameters<
+      typeof StatusEffectDisplay
+    >[0]['effects'];
 
     return (
       <div className={styles.partnerSummaryStatusRow}>
-        <StatusEffectDisplay effects={visibleEffects} mode="chips" compact emptyText="暂无 Buff" />
-        {hiddenCount > 0 ? (
-          <span className={styles.partnerSummaryStatusMore}>+{hiddenCount}</span>
-        ) : null}
+        <StatusEffectDisplay
+          effects={effects}
+          mode="chips"
+          compact
+          maxVisible={3}
+          showRemainingCount
+          emptyText="暂无 Buff"
+        />
       </div>
     );
   };

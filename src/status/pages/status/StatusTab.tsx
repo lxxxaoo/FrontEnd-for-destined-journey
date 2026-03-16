@@ -212,7 +212,13 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
           <div className={styles.overviewSummaryGrid}>
             <div className={styles.overviewSummaryItem}>
               <span className={styles.overviewStatLabel}>状态效果</span>
-              <StatusEffectDisplay effects={statusEffects} mode="chips" emptyText="无效果" />
+              <StatusEffectDisplay
+                effects={statusEffects}
+                mode="chips"
+                maxVisible={4}
+                showRemainingCount
+                emptyText="无效果"
+              />
             </div>
             <div className={styles.overviewSummaryItem}>
               <span className={styles.overviewStatLabel}>登神长阶</span>
@@ -289,6 +295,8 @@ const StatusTabContent: FC<WithMvuDataProps> = ({ data }) => {
                   effects={statusEffects}
                   mode="chips"
                   compact
+                  maxVisible={4}
+                  showRemainingCount
                   emptyText="无效果"
                 />
               </div>

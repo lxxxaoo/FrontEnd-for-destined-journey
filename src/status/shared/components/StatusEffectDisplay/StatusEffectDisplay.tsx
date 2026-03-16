@@ -19,6 +19,10 @@ export interface StatusEffectDisplayProps {
   editEnabled?: boolean;
   pathPrefix?: string;
   emptyText?: string;
+  /** chips 模式下最多展示的数量（超出显示 +N） */
+  maxVisible?: number;
+  /** chips 模式下是否显示剩余数量 */
+  showRemainingCount?: boolean;
   onDelete?: (name: string) => void;
 }
 
@@ -56,6 +60,8 @@ const renderChips = (
   effects: Record<string, StatusEffectItem>,
   compact: boolean,
   emptyText: string,
+  maxVisible: number | undefined,
+  showRemainingCount: boolean,
 ) => {
   const entries = Object.entries(effects);
 
@@ -63,9 +69,12 @@ const renderChips = (
     return <span className={styles.buffEmpty}>{emptyText}</span>;
   }
 
+  const visibleEntries = typeof maxVisible === 'number' ? entries.slice(0, maxVisible) : entries;
+  const remainingCount = Math.max(entries.length - visibleEntries.length, 0);
+
   return (
     <div className={`${styles.buffChipGroup} ${compact ? styles.buffChipGroupCompact : ''}`}>
-      {entries.map(([name, effect]) => (
+      {visibleEntries.map(([name, effect]) => (
         <span
           key={name}
           className={`${styles.buffChip} ${getChipToneClass(effect.类型)}`}
@@ -78,6 +87,9 @@ const renderChips = (
           {effect.剩余时间 ? <span className={styles.buffChipMeta}>{effect.剩余时间}</span> : null}
         </span>
       ))}
+      {showRemainingCount && remainingCount > 0 ? (
+        <span className={styles.buffChipMore}>+{remainingCount}</span>
+      ) : null}
     </div>
   );
 };
@@ -89,12 +101,14 @@ export const StatusEffectDisplay: FC<StatusEffectDisplayProps> = ({
   editEnabled = false,
   pathPrefix,
   emptyText = '暂无状态效果',
+  maxVisible,
+  showRemainingCount = true,
   onDelete,
 }) => {
   const entries = Object.entries(effects);
 
   if (mode === 'chips') {
-    return renderChips(effects, compact, emptyText);
+    return renderChips(effects, compact, emptyText, maxVisible, showRemainingCount);
   }
 
   if (!entries.length) {

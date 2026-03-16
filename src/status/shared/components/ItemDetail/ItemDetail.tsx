@@ -83,7 +83,8 @@ export const ItemDetail: FC<ItemDetailProps> = ({
 
   const effectEntries = _.entries(data.效果 ?? {});
   const effectNames = effectEntries.map(([key]) => key);
-  const summaryEffectNames = effectNames.slice(0, 4);
+  const summaryEffectNames = effectNames.slice(0, 3);
+  const remainingEffectCount = Math.max(effectNames.length - summaryEffectNames.length, 0);
 
   const renderDeleteButton = () => {
     if (!editEnabled || !onDelete) return null;
@@ -194,6 +195,9 @@ export const ItemDetail: FC<ItemDetailProps> = ({
               {effectName}
             </span>
           ))}
+          {remainingEffectCount > 0 ? (
+            <span className={styles.itemSummaryEffectMore}>+{remainingEffectCount}</span>
+          ) : null}
         </div>
       ) : null}
     </>
