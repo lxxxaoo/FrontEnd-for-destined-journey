@@ -19,17 +19,6 @@ export interface ItemInspectModalProps {
 }
 
 /**
- * 将 iframe 滚动到父页面视觉中央
- * 复用确认弹窗相同的交互基线，避免中上部触发时详情面板超出用户视线焦点。
- */
-const scrollToIframeCenter = () => {
-  const frameElement = window.frameElement;
-  if (frameElement) {
-    frameElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-};
-
-/**
  * 资产详情中央面板
  * 用于承载 ItemsTab 的二级详情信息，不依赖底部抽屉或折叠面板。
  */
@@ -44,8 +33,6 @@ export const ItemInspectModal: FC<ItemInspectModalProps> = ({
 }) => {
   useEffect(() => {
     if (!open) return;
-
-    scrollToIframeCenter();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
