@@ -76,7 +76,7 @@
       <button class="agree-button" :disabled="!canContinue" @click="handleContinue">继续</button>
     </div>
 
-    <!-- 协议勾选（在继续按钮下方） -->
+    <!-- 协议勾选 -->
     <div class="agreement-checkbox-row" @click.prevent="toggleAgreed">
       <span class="custom-checkbox" :class="{ checked: isAgreed }">
         <span v-if="isAgreed" class="check-mark">✓</span>
@@ -158,8 +158,7 @@
                 本项目运行于用户本地环境，<strong>不会主动收集、上传或存储</strong>您的任何个人数据。
               </li>
               <li>
-                与 AI 服务的通信由您自行配置的 API 完成，相关数据处理遵循对应 AI
-                服务提供商的隐私政策。
+                与 AI 服务的通信由您自行配置的 API 完成，相关数据处理遵循对应 AI服务提供商的隐私政策。
               </li>
             </ul>
 
@@ -174,7 +173,7 @@
               <li>若本协议中的任何条款被认定为无效或不可执行，其余条款仍然有效。</li>
               <li>如有任何疑问，请通过项目官方渠道联系制作团队。</li>
               <li>
-                依据您行为的严重性，制作组可以<strong>自行决定</strong>您死后是否转世到战锤40000世界，永世为帝皇奉献自己的价值。
+                依据您行为的严重性，制作组可以自行决定您死后是否转世到战锤40000世界，永世为帝皇奉献自己的价值。
               </li>
             </ul>
           </div>
@@ -228,7 +227,7 @@ const flavorTexts = [
   '听，风中传来了远古的歌谣...',
   '在日与夜的交界处，寻找属于你的故事',
   '命运的诗篇，往往从一次微不足道的停顿开始',
-  '收下了一笔可观的小费后，H一串说：命一串其实是战锤世界观，因为488年开局的两个8横过来就是40k',
+  'H一串说：命一串其实是战锤世界观，因为488年开局的两个8横过来就是40k',
   '极其极其极其极其极其极其极其极其极其极其',
   '由于由于由于由于由于由于由于由于由于由于由于',
 ];
@@ -359,7 +358,7 @@ onUnmounted(() => {
   font-size: 2.2em;
 }
 
-/* 环境检查容器 - 复用 EnvCheckPage 样式 */
+/* 环境检查容器  */
 .env-check-container {
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -367,7 +366,7 @@ onUnmounted(() => {
   padding: 10px 20px;
   margin: 25px auto;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  max-width: 500px;
+  max-width: 440px;
   width: 100%;
 }
 
