@@ -519,17 +519,13 @@
 
 .partnerOverviewStats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: 1fr;
   gap: $spacing-sm;
 }
 
 @media (max-width: 760px) {
   .partnerOverviewIdentityRow {
     align-items: flex-start;
-  }
-
-  .partnerOverviewStats {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -623,10 +619,6 @@
 
   .partnerOverviewIdentityRow {
     flex-direction: column;
-  }
-
-  .partnerOverviewStats {
-    grid-template-columns: 1fr;
   }
 
   .partnerInfo {
