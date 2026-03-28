@@ -46,9 +46,7 @@ export const ItemInspectModal: FC<ItemInspectModalProps> = ({
 
   const handleOverlayClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!closeOnOverlay) {
-        return;
-      }
+      if (!closeOnOverlay) return;
 
       if (event.target === event.currentTarget) {
         onClose?.();

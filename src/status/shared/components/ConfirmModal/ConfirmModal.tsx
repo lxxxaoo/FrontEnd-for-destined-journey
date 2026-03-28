@@ -1,4 +1,5 @@
 import { FC, ReactNode, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './ConfirmModal.module.scss';
 
 /** 确认弹窗信息行配置 */
@@ -76,11 +77,16 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
   }, [open]);
 
   /** 处理遮罩点击 */
-  const handleOverlayClick = useCallback(() => {
-    if (closeOnOverlay && onClose) {
-      onClose();
-    }
-  }, [closeOnOverlay, onClose]);
+  const handleOverlayClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!closeOnOverlay) return;
+
+      if (event.target === event.currentTarget) {
+        onClose?.();
+      }
+    },
+    [closeOnOverlay, onClose],
+  );
 
   /** 阻止弹窗内部点击冒泡 */
   const handleModalClick = useCallback((event: React.MouseEvent) => {
@@ -102,7 +108,7 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
 
   if (!open) return null;
 
-  return (
+  const modalNode = (
     <div className={styles.overlay} onClick={handleOverlayClick}>
       <div className={`${styles.modal} ${className ?? ''}`} onClick={handleModalClick}>
         <div className={styles.title}>{title}</div>
@@ -140,4 +146,6 @@ export const ConfirmModal: FC<ConfirmModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalNode, document.body);
 };
