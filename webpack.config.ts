@@ -57,11 +57,25 @@ function common_path(lhs: string, rhs: string) {
   return lhs_parts.join(path.sep);
 }
 
-function glob_script_files() {
-  const files: string[] = globSync(`src/**/index.{ts,tsx,js,jsx}`).filter(
-    file =>
-      process.env.CI !== 'true' || !fs.readFileSync(path.join(__dirname, file)).includes('@no-ci'),
-  );
+function glob_script_files(entryFilter?: string) {
+  const files: string[] = globSync(`src/**/index.{ts,tsx,js,jsx}`).filter(file => {
+    const matchesCiRule =
+      process.env.CI !== 'true' || !fs.readFileSync(path.join(__dirname, file)).includes('@no-ci');
+    if (!matchesCiRule) {
+      return false;
+    }
+
+    if (!entryFilter) {
+      return true;
+    }
+
+    const relativeScriptPath = path.relative(
+      path.join(__dirname, 'src'),
+      path.join(__dirname, file),
+    );
+    const [projectName] = relativeScriptPath.split(path.sep);
+    return projectName === entryFilter;
+  });
 
   const results: string[] = [];
   const handle = (file: string) => {
@@ -83,16 +97,18 @@ function glob_script_files() {
   return results;
 }
 
-const config: Config = {
-  port: 6621,
-  entries: glob_script_files().map(parse_entry),
-};
+function createConfig(entryFilter?: string): Config {
+  return {
+    port: 6621,
+    entries: glob_script_files(entryFilter).map(parse_entry),
+  };
+}
 
 let io: Server;
 function watch_it(compiler: webpack.Compiler) {
   if (compiler.options.watch) {
     if (!io) {
-      const port = config.port ?? 6621;
+      const port = 6621;
       io = new Server(port, { cors: { origin: '*' } });
       console.info(`[Listener] 已启动酒馆监听服务, 正在监听: http://0.0.0.0:${port}`);
       io.on('connect', socket => {
@@ -155,6 +171,7 @@ function dump_schema(compiler: webpack.Compiler) {
 }
 
 // 公共配置常量 (DRY 原则)
+const RegExpSpecialCharacters = /[.*+?^${}()|[\]\\]/g;
 
 /** ts-loader 公共配置 */
 const TsLoaderOptions = {
@@ -164,7 +181,49 @@ const TsLoaderOptions = {
     noUnusedLocals: false,
     noUnusedParameters: false,
   },
-} as const;
+};
+
+function resolveEntryProjectName(entry: Entry) {
+  const relativeScriptPath = path.relative(
+    path.join(__dirname, 'src'),
+    path.join(__dirname, entry.script),
+  );
+  const [projectName] = relativeScriptPath.split(path.sep);
+
+  if (!projectName) {
+    throw new Error(`无法从入口路径解析子项目名称: ${entry.script}`);
+  }
+
+  return projectName;
+}
+
+function resolveTsconfigFile(entry: Entry) {
+  return path.join(__dirname, 'src', resolveEntryProjectName(entry), 'tsconfig.json');
+}
+
+function createEntryScopedAutoImportInclude(entry: Entry) {
+  const projectName = resolveEntryProjectName(entry).replace(RegExpSpecialCharacters, '\\$&');
+
+  return [
+    new RegExp(`[\\/]src[\\/]${projectName}[\\/].*\\.[tj]sx?$`),
+    new RegExp(`[\\/]src[\\/]${projectName}[\\/].*\\.vue$`),
+    new RegExp(`[\\/]src[\\/]${projectName}[\\/].*\\.vue\\?vue`),
+    new RegExp(`[\\/]src[\\/]${projectName}[\\/].*\\.vue\\.[tj]sx?\\?vue`),
+  ];
+}
+
+function createEntryScopedComponentGlobs(entry: Entry) {
+  const projectName = resolveEntryProjectName(entry);
+  return [`src/${projectName}/**/*.vue`];
+}
+
+function createTsLoaderOptions(entry: Entry) {
+  return {
+    ...TsLoaderOptions,
+    instance: entry.script,
+    configFile: resolveTsconfigFile(entry),
+  };
+}
 
 /** css-loader 基础配置 */
 const CssLoaderOptionsBase = { url: false } as const;
@@ -186,6 +245,7 @@ const ExcludeNodeModules = /node_modules/;
 type AssetType = 'asset/source' | 'asset/inline';
 
 interface ResourceQueryRuleOptions {
+  entry: Entry;
   resourceQuery: RegExp;
   type: AssetType;
 }
@@ -195,6 +255,7 @@ interface ResourceQueryRuleOptions {
  * @description 用于 ?raw 和 ?url 导入的统一处理
  */
 function createResourceQueryRules({
+  entry,
   resourceQuery,
   type,
 }: ResourceQueryRuleOptions): webpack.RuleSetRule[] {
@@ -202,7 +263,7 @@ function createResourceQueryRules({
     {
       test: /\.tsx?$/,
       loader: 'ts-loader',
-      options: TsLoaderOptions,
+      options: createTsLoaderOptions(entry),
       resourceQuery,
       type,
       exclude: ExcludeNodeModules,
@@ -340,6 +401,19 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
       maxEntrypointSize: 1024 * 1024, // 1 MiB
     },
     devtool: argv.mode === 'production' ? 'hidden-source-map' : 'eval-source-map',
+    cache: {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [
+          __filename,
+          path.join(__dirname, 'package.json'),
+          path.join(__dirname, 'tsconfig.json'),
+          path.join(__dirname, 'tsconfig.base.json'),
+          path.join(__dirname, 'postcss.config.cjs'),
+          resolveTsconfigFile(entry),
+        ],
+      },
+    },
     watchOptions: {
       ignored: ['**/dist', '**/node_modules'],
     },
@@ -381,14 +455,14 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
         {
           oneOf: [
             // ?raw 导入规则
-            ...createResourceQueryRules({ resourceQuery: /raw/, type: 'asset/source' }),
+            ...createResourceQueryRules({ entry, resourceQuery: /raw/, type: 'asset/source' }),
             // ?url 导入规则
-            ...createResourceQueryRules({ resourceQuery: /url/, type: 'asset/inline' }),
+            ...createResourceQueryRules({ entry, resourceQuery: /url/, type: 'asset/inline' }),
             // TypeScript 默认规则
             {
               test: /\.tsx?$/,
               loader: 'ts-loader',
-              options: TsLoaderOptions,
+              options: createTsLoaderOptions(entry),
               exclude: ExcludeNodeModules,
             },
             // HTML 规则
@@ -451,8 +525,9 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
         { apply: dump_schema },
         new VueLoaderPlugin(),
         unpluginAutoImport({
-          dts: true,
+          dts: argv.mode === 'production' ? false : true,
           dtsMode: 'overwrite',
+          include: createEntryScopedAutoImportInclude(entry),
           imports: [
             'vue',
             'pinia',
@@ -464,9 +539,9 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
           ],
         }),
         unpluginVueComponents({
-          dts: true,
+          dts: argv.mode === 'production' ? false : true,
           syncMode: 'overwrite',
-          // globs: ['src/panel/component/*.vue'],
+          globs: createEntryScopedComponentGlobs(entry),
           resolvers: [VueUseComponentsResolver(), VueUseDirectiveResolver()],
         }),
         new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
@@ -513,26 +588,27 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
               },
             }),
       ],
-      splitChunks: {
-        chunks: 'async',
-        minSize: 20000,
-        minChunks: 1,
-        maxAsyncRequests: 30,
-        maxInitialRequests: 30,
-        cacheGroups: {
-          vendor: {
-            name: 'vendor',
-            test: /[\\/]node_modules[\\/]/,
-            priority: -10,
-          },
-          default: {
-            name: 'default',
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-        },
-      },
+      splitChunks: false,
+      // splitChunks: {
+      //   chunks: 'async',
+      //   minSize: 20000,
+      //   minChunks: 1,
+      //   maxAsyncRequests: 30,
+      //   maxInitialRequests: 30,
+      //   cacheGroups: {
+      //     vendor: {
+      //       name: 'vendor',
+      //       test: /[\\/]node_modules[\\/]/,
+      //       priority: -10,
+      //     },
+      //     default: {
+      //       name: 'default',
+      //       minChunks: 2,
+      //       priority: -20,
+      //       reuseExistingChunk: true,
+      //     },
+      //   },
+      // },
     },
     externals: ({ context, request }, callback) => {
       if (!context || !request) {
@@ -585,4 +661,7 @@ function parse_configuration(entry: Entry): (_env: any, argv: any) => webpack.Co
   });
 }
 
-export default config.entries.map(parse_configuration);
+export default (env: { entry?: string } = {}, argv: any) => {
+  const config = createConfig(env.entry);
+  return config.entries.map(entry => parse_configuration(entry)(env, argv));
+};
